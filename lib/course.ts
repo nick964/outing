@@ -4,9 +4,9 @@ export type TeamId = "team1" | "team2" | "team3";
 export type Team = { id: TeamId; code: string; name: string; players: string[] };
 
 export const TEAMS: Team[] = [
-  { id: "team1", code: "azalea", name: "Team 1", players: ["Rich", "Fitz", "Andrews"] },
-  { id: "team2", code: "magnolia", name: "Team 2", players: ["Nicky Robby", "Toner", "TJ"] },
-  { id: "team3", code: "dogwood", name: "Team 3", players: ["Nick B", "Moff", "Dickson"] },
+  { id: "team1", code: "rich", name: "Team 1", players: ["Rich", "Fitz", "Andrews"] },
+  { id: "team2", code: "toner", name: "Team 2", players: ["Nicky Robby", "Toner", "TJ"] },
+  { id: "team3", code: "moff", name: "Team 3", players: ["Nick B", "Moff", "Dickson"] },
 ];
 
 // John F. Byrne Golf Course, Philadelphia (from the course scorecard)

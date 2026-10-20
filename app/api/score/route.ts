@@ -1,7 +1,7 @@
 import { getState, setHole } from "@/lib/store";
 import { teamByCode } from "@/lib/course";
 
-// Body: { code: "azalea", hole: 1-18, strokes: 1-15 | null }. null clears the hole.
+// Body: { code: "rich", hole: 1-18, strokes: 1-15 | null }. null clears the hole.
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const team = teamByCode(body?.code);

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Scorecard } from "@/components/Scorecard";
 import { TEAMS, teamByCode } from "@/lib/course";
 
-// One page per team code: /azalea, /magnolia, /dogwood.
+// One page per team code: /rich, /toner, /moff.
 export async function generateStaticParams() {
   return TEAMS.map((t) => ({ code: t.code }));
 }
