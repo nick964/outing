@@ -6,6 +6,7 @@ import { DEFAULT_COURSE, DEFAULT_PARS, emptyScores, teamById, type OutingState, 
 type Ctx = {
   state: OutingState;
   loaded: boolean;
+  updatedAt: number | null;
   problem: string | null;
   apply: (s: OutingState) => void;
   refresh: () => Promise<void>;
@@ -28,6 +29,11 @@ export function useOuting() {
   return ctx;
 }
 
+export function ProblemBanner() {
+  const { problem } = useOuting();
+  return problem ? <div className="alert"><strong>Heads up.</strong> {problem}</div> : null;
+}
+
 export function OutingProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<OutingState>(() => ({
     status: "live", winner: null, pars: DEFAULT_PARS.slice(), course: DEFAULT_COURSE, scores: emptyScores(),
@@ -40,7 +46,8 @@ export function OutingProvider({ children }: { children: React.ReactNode }) {
   const myTeam = teamOverride === undefined ? storedTeam : teamOverride;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const apply = useCallback((s: OutingState) => { setState(s); setLoaded(true); }, []);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
+  const apply = useCallback((s: OutingState) => { setState(s); setLoaded(true); setUpdatedAt(Date.now()); }, []);
 
   const refresh = useCallback(async () => {
     try {
@@ -74,8 +81,7 @@ export function OutingProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <OutingContext.Provider value={{ state, loaded, problem, apply, refresh, toast, myTeam, setMyTeam }}>
-      {problem && <div className="wrap"><div className="alert" style={{ marginTop: 16 }}><strong>Heads up.</strong> {problem}</div></div>}
+    <OutingContext.Provider value={{ state, loaded, updatedAt, problem, apply, refresh, toast, myTeam, setMyTeam }}>
       {children}
       <div className={`toast${toastMsg ? " show" : ""}`} role="status">{toastMsg?.text}</div>
     </OutingContext.Provider>

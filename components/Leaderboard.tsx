@@ -1,6 +1,6 @@
 "use client";
 
-import { AMEN, fmtPar, parClass, playersText, ranked, teamById, teamStats } from "@/lib/course";
+import { AMEN, fmtPar, parClass, playersText, ranked, teamById, teamStats, type OutingState, type RankedRow } from "@/lib/course";
 import { useOuting } from "./OutingProvider";
 
 const sum = (arr: (number | null)[], a: number, b: number) => {
@@ -9,35 +9,53 @@ const sum = (arr: (number | null)[], a: number, b: number) => {
 };
 
 function Mark({ v, par }: { v: number | null; par: number }) {
-  if (v == null) return <span style={{ color: "var(--line)" }}>·</span>;
+  if (v == null) return <span className="dot">·</span>;
   const d = v - par;
   const cls = d <= -2 ? "eagle" : d === -1 ? "birdie" : d === 1 ? "bogey" : d >= 2 ? "double" : "";
   return <i className={`mk ${cls}`}>{v}</i>;
 }
 
-// One scorecard row: label, front nine, OUT, back nine, IN, TOT.
-function CardRow({ label, cells, totals, className }: {
-  label: string; cells: React.ReactNode[]; totals: [React.ReactNode, React.ReactNode, React.ReactNode]; className?: string;
-}) {
+// One nine of the scorecard (holes from+1 … from+9). Two of these fit a phone without sideways scrolling.
+function NineTable({ state, rows, from }: { state: OutingState; rows: RankedRow[]; from: 0 | 9 }) {
+  const holes = Array.from({ length: 9 }, (_, i) => from + i + 1);
+  const total = from === 0 ? "OUT" : "IN";
   return (
-    <tr className={className}>
-      <td className="lbl">{label}</td>
-      {cells.slice(0, 9).map((c, i) => <td key={i}>{c}</td>)}
-      <td className="sum">{totals[0]}</td>
-      {cells.slice(9).map((c, i) => <td key={i + 9}>{c}</td>)}
-      <td className="sum">{totals[1]}</td>
-      <td className="sum">{totals[2]}</td>
-    </tr>
+    <table className="sc">
+      <thead>
+        <tr>
+          <th className="lbl">Hole</th>
+          {holes.map((n) => <th key={n} className={AMEN.has(n) ? "amen" : undefined}>{n}</th>)}
+          <th className="sum">{total}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr className="par">
+          <td className="lbl">Par</td>
+          {holes.map((n) => <td key={n}>{state.pars[n - 1]}</td>)}
+          <td className="sum">{sum(state.pars, from, from + 9)}</td>
+        </tr>
+        {rows.map((r) => {
+          const sc = state.scores[r.t.id];
+          return (
+            <tr key={r.t.id}>
+              <td className="lbl">{r.t.name.replace("Team ", "T")}</td>
+              {holes.map((n) => <td key={n}><Mark v={sc[n - 1]} par={state.pars[n - 1]} /></td>)}
+              <td className="sum">{sum(sc, from, from + 9)}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
 
 export function Leaderboard() {
-  const { state } = useOuting();
+  const { state, updatedAt } = useOuting();
   const rows = ranked(state);
   const final = state.status === "complete";
   const champ = final ? teamById(state.winner) : undefined;
   const champStats = champ ? teamStats(state, champ.id) : null;
-  const holes = Array.from({ length: 18 }, (_, i) => i + 1);
+  const updated = updatedAt ? new Date(updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : null;
 
   return (
     <section className="view">
@@ -52,7 +70,10 @@ export function Leaderboard() {
       <div className="board">
         <div className="board-head">
           <h2>LEADERS</h2>
-          <div className="meta">{final ? <span>Final results</span> : <><span className="live-dot" /><span>Live scoring</span></>}</div>
+          <div className="meta">
+            {final ? <span>Final results</span> : <><span className="live-dot" /><span>Live</span></>}
+            {updated && <span>· Updated {updated}</span>}
+          </div>
         </div>
         <div className="board-row colhead"><div>POS</div><div>TEAM</div><div>TO PAR</div><div>THRU</div></div>
         {rows.map((r, i) => {
@@ -69,42 +90,19 @@ export function Leaderboard() {
             </div>
           );
         })}
-        <div className="board-foot">{final ? "The Committee has declared the results official." : "Scores post within a few seconds of a team saving a hole."}</div>
+        <div className="board-foot">{final ? "The Committee has declared the results official." : "Updates on its own every few seconds."}</div>
       </div>
 
-      <div className="sec-h"><h3>Hole by hole</h3><span>Swipe the card sideways on a phone</span></div>
+      <div className="sec-h"><h3>Hole by hole</h3></div>
       <div className="card">
-        <div className="scroll">
-          <table className="sc">
-            <thead>
-              <tr>
-                <th className="lbl">Hole</th>
-                {holes.slice(0, 9).map((n) => <th key={n} className={AMEN.has(n) ? "amen" : undefined}>{n}</th>)}
-                <th className="sum">OUT</th>
-                {holes.slice(9).map((n) => <th key={n} className={AMEN.has(n) ? "amen" : undefined}>{n}</th>)}
-                <th className="sum">IN</th>
-                <th className="sum">TOT</th>
-              </tr>
-            </thead>
-            <tbody>
-              <CardRow className="par" label="Par" cells={state.pars}
-                totals={[sum(state.pars, 0, 9), sum(state.pars, 9, 18), sum(state.pars, 0, 18)]} />
-              {rows.map((r) => {
-                const sc = state.scores[r.t.id];
-                return (
-                  <CardRow key={r.t.id} label={r.t.name} cells={sc.map((v, i) => <Mark key={i} v={v} par={state.pars[i]} />)}
-                    totals={[sum(sc, 0, 9), sum(sc, 9, 18), sum(sc, 0, 18)]} />
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <NineTable state={state} rows={rows} from={0} />
+        <NineTable state={state} rows={rows} from={9} />
         <div className="legend">
-          <span><i className="mk eagle">3</i> Eagle or better</span>
+          <span><i className="mk eagle">3</i> Eagle+</span>
           <span><i className="mk birdie">3</i> Birdie</span>
           <span><i className="mk bogey">5</i> Bogey</span>
           <span><i className="mk double">6</i> Double+</span>
-          <span style={{ color: "var(--azalea)" }}>Pink holes 11–13: Amen Corner</span>
+          <span className="amen-key">11–13 Amen Corner</span>
         </div>
       </div>
     </section>

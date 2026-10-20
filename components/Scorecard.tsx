@@ -68,8 +68,7 @@ export function Scorecard({ code }: { code: string }) {
       <div className="team-hero">
         <div>
           <h2>{team.name}</h2>
-          <p>{playersText(team)}</p>
-          <button type="button" className="switch" onClick={() => { setMyTeam(null); router.push("/scorecard?switch=1"); }}>Not your team? Switch</button>
+          <p>{playersText(team)} · <button type="button" className="switch" onClick={() => { setMyTeam(null); router.push("/scorecard?switch=1"); }}>Switch team</button></p>
         </div>
         <div className="mini">
           <div className={`n ${st.thru ? parClass(st.toPar) : "e"}`}>{st.thru ? fmtPar(st.toPar) : "E"}</div>
@@ -81,26 +80,21 @@ export function Scorecard({ code }: { code: string }) {
       {error && <div className="alert"><strong>Score not saved.</strong> {error}</div>}
 
       <div className="card">
-        <div className="holes">
-          <div className="nine-label">Front nine</div>
-          <div className="nine">{[1, 2, 3, 4, 5, 6, 7, 8, 9].map(holeBtn)}</div>
-          <div className="nine-label">Back nine</div>
-          <div className="nine">{[10, 11, 12, 13, 14, 15, 16, 17, 18].map(holeBtn)}</div>
-        </div>
-      </div>
-
-      <div className="card">
         <div className="entry">
-          <div>
-            <div className="hole-title">Hole {current}</div>
-            <div className="hole-sub">
+          <div className="hole-head">
+            <button className="hole-nav" aria-label="Previous hole" disabled={current <= 1} onClick={() => pick(current - 1)}>‹</button>
+            <div>
+              <div className="hole-title">Hole {current}</div>
+              <div className="hole-sub">
               Par {par} · Hcp {HCP[current - 1]}
               {AMEN.has(current) && <> · <span className="amen">Amen Corner</span></>}
-              {saved != null && " · Saved"}
+                {saved != null && " · Saved"}
+              </div>
             </div>
-            <div className="hole-yards">
-              {TEES.map((t) => <span key={t.name}>{t.name} <b>{t.yards[current - 1]}</b></span>)}
-            </div>
+            <button className="hole-nav" aria-label="Next hole" disabled={current >= 18} onClick={() => pick(current + 1)}>›</button>
+          </div>
+          <div className="hole-yards">
+            {TEES.map((t) => <span key={t.name}>{t.name} <b>{t.yards[current - 1]}</b></span>)}
           </div>
           <div className="stepper">
             <button className="step" aria-label="One fewer stroke" disabled={final || strokes <= 1} onClick={() => setPending(strokes - 1)}>−</button>
@@ -108,13 +102,20 @@ export function Scorecard({ code }: { code: string }) {
             <button className="step" aria-label="One more stroke" disabled={final || strokes >= 15} onClick={() => setPending(strokes + 1)}>+</button>
           </div>
           <div className="result-name">{resultName(strokes, par)}</div>
-          <div className="actions">
-            <button className="btn primary" disabled={final || saving || !loaded} onClick={() => send(strokes)}>{saveLabel}</button>
-          </div>
+          <button className="btn primary save" disabled={final || saving || !loaded} onClick={() => send(strokes)}>{saveLabel}</button>
           {!final && saved != null && (
-            <div className="actions"><button className="btn ghost" disabled={saving} onClick={() => send(null)}>Clear this hole</button></div>
+            <button className="switch" disabled={saving} onClick={() => send(null)}>Clear this hole</button>
           )}
-          <p className="note">Enter your team score for each hole. Tap any hole above to fix a mistake.</p>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="holes">
+          <div className="nine-label">Front nine</div>
+          <div className="nine">{[1, 2, 3, 4, 5, 6, 7, 8, 9].map(holeBtn)}</div>
+          <div className="nine-label">Back nine</div>
+          <div className="nine">{[10, 11, 12, 13, 14, 15, 16, 17, 18].map(holeBtn)}</div>
+          <p className="note">Tap any hole to jump to it or fix a mistake.</p>
         </div>
       </div>
     </section>

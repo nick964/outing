@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Libre_Caslon_Display, Libre_Caslon_Text, Libre_Franklin, Oswald } from "next/font/google";
-import { OutingProvider } from "@/components/OutingProvider";
+import { OutingProvider, ProblemBanner } from "@/components/OutingProvider";
 import { Header } from "@/components/Header";
 import "./globals.css";
 
@@ -20,6 +20,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: "#0b3b28",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -29,7 +30,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <OutingProvider>
           <Header />
           <main>
-            <div className="wrap">{children}</div>
+            <div className="wrap">
+              <ProblemBanner />
+              {children}
+            </div>
           </main>
           <footer>
             <div className="wrap">Patrons are reminded: no running, no phones on the backswing. · <Link href="/admin">Committee</Link></div>
