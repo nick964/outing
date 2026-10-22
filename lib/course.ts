@@ -21,6 +21,7 @@ export const HCP = [8, 10, 14, 18, 6, 2, 16, 12, 4, 7, 15, 3, 17, 5, 13, 11, 1, 
 export const AMEN = new Set([11, 12, 13]);
 
 export type Scores = Record<TeamId, (number | null)[]>;
+
 export type OutingState = {
   status: "live" | "complete";
   winner: TeamId | null;
